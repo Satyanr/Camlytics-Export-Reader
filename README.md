@@ -54,7 +54,7 @@ Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi d
 <hr>
 
 
-<h2>📦 Cara Menjalankan</h2>
+<h2>📦 Akses Webnya</h2>
 
 <a href="https://satyanr.github.io/Camlytics-Export-Reader/">
 Click disini
