@@ -13,8 +13,6 @@ Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi d
   <li>⏰ Chart per Jam</li>
   <li>🥧 Pie Chart Summary</li>
   <li>📋 Table interaktif dengan pagination</li>
-  <li>🔢 Format angka otomatis (1,000 / 10,000)</li>
-  <li>🎨 UI modern & responsive</li>
   <li>⚡ Tanpa backend (pure HTML + JS)</li>
 </ul>
 
@@ -55,24 +53,13 @@ Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi d
 
 <hr>
 
-<h2>🛠️ Teknologi</h2>
-<ul>
-  <li>HTML5</li>
-  <li>CSS3</li>
-  <li>JavaScript (Vanilla)</li>
-  <li>Chart.js</li>
-  <li>SheetJS (xlsx)</li>
-</ul>
-
-<hr>
 
 <h2>📦 Cara Menjalankan</h2>
 
 <pre>
-git clone https://github.com/username/repo-name.git
+open https://satyanr.github.io/Camlytics-Export-Reader/
 </pre>
 
-<p>Buka file <b>index.html</b> di browser, lalu upload file Excel.</p>
 
 <hr>
 
