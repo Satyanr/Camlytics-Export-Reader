@@ -1,71 +1,115 @@
-📊 Traffic Analytics Dashboard
+<h1 align="center">📊 Traffic Analytics Dashboard</h1>
 
-Dashboard berbasis web untuk upload file Excel (.xlsx, .xls, .csv) dan secara otomatis menampilkan visualisasi data dalam bentuk:
+<p align="center">
+Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi data.
+</p>
 
-📅 Chart per Tanggal
-⏰ Chart per Jam
-🥧 Pie Chart Summary
-📋 Table interaktif dengan pagination
-🚀 Fitur Utama
-Upload file Excel langsung di browser
-Auto parsing data (tanpa backend)
-Deteksi kolom fleksibel (Time, Origin)
-Visualisasi menggunakan Chart.js
-Table dengan pagination
-Format angka otomatis (1,000 / 10,000)
-UI modern & responsive
-Tanpa install (pure HTML + JS)
-📂 Format Data Excel
+<hr>
 
-Pastikan file memiliki minimal kolom berikut:
+<h2>🚀 Fitur Utama</h2>
+<ul>
+  <li>📂 Upload file Excel (.xlsx, .xls, .csv)</li>
+  <li>📅 Chart per Tanggal</li>
+  <li>⏰ Chart per Jam</li>
+  <li>🥧 Pie Chart Summary</li>
+  <li>📋 Table interaktif dengan pagination</li>
+  <li>🔢 Format angka otomatis (1,000 / 10,000)</li>
+  <li>🎨 UI modern & responsive</li>
+  <li>⚡ Tanpa backend (pure HTML + JS)</li>
+</ul>
 
-Time	Origin
-11/03/2026 17:03	Pedestrian
-11/03/2026 17:15	Vehicle
-Keterangan:
-Time → tanggal & jam
-Origin → kategori:
-Pedestrian
-Vehicle
-selain itu → dianggap Unknown
-🛠️ Teknologi
-HTML5
-CSS3
-JavaScript (Vanilla)
-Chart.js
-SheetJS (xlsx)
-📦 Cara Menjalankan
-Clone repository:
+<hr>
+
+<h2>📂 Format Data Excel</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Origin</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>11/03/2026 17:03</td>
+      <td>Pedestrian</td>
+    </tr>
+    <tr>
+      <td>11/03/2026 17:15</td>
+      <td>Vehicle</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><b>Keterangan:</b></p>
+<ul>
+  <li><b>Time</b> → tanggal & jam</li>
+  <li><b>Origin</b> → kategori:
+    <ul>
+      <li>Pedestrian</li>
+      <li>Vehicle</li>
+      <li>Lainnya → dianggap Unknown</li>
+    </ul>
+  </li>
+</ul>
+
+<hr>
+
+<h2>🛠️ Teknologi</h2>
+<ul>
+  <li>HTML5</li>
+  <li>CSS3</li>
+  <li>JavaScript (Vanilla)</li>
+  <li>Chart.js</li>
+  <li>SheetJS (xlsx)</li>
+</ul>
+
+<hr>
+
+<h2>📦 Cara Menjalankan</h2>
+
+<pre>
 git clone https://github.com/username/repo-name.git
-Buka file:
-index.html
-Upload file Excel kamu 🎉
-📸 Preview
+</pre>
 
+<p>Buka file <b>index.html</b> di browser, lalu upload file Excel.</p>
+
+<hr>
+
+<h2>📸 Preview</h2>
+
+<p>
 Dashboard menampilkan:
+</p>
 
-Bar chart per tanggal
-Bar chart per jam
-Pie chart distribusi
-Table detail + pagination
-⚡ Cara Kerja
-User upload file Excel
-File dibaca menggunakan SheetJS
-Data diproses:
-Group by tanggal
-Group by jam
-Hitung total kategori
-Data ditampilkan ke chart & table
-📌 Catatan
-Tidak perlu backend / server
-Semua proses berjalan di browser
-Cocok untuk analisa cepat & dashboard internal
-🧑‍💻 Author
+<ul>
+  <li>Bar chart per tanggal</li>
+  <li>Bar chart per jam</li>
+  <li>Pie chart distribusi</li>
+  <li>Table detail + pagination</li>
+</ul>
 
-Satya NR
+<hr>
 
-⭐ Support
+<h2>⚡ Cara Kerja</h2>
+<ol>
+  <li>User upload file Excel</li>
+  <li>File dibaca menggunakan SheetJS</li>
+  <li>Data diproses (group by tanggal & jam)</li>
+  <li>Ditampilkan ke chart & table</li>
+</ol>
 
-Kalau project ini membantu:
+<hr>
 
-⭐ Star repo ini
+<h2>🧑‍💻 Author</h2>
+<p><b>Satya NR</b></p>
+
+<hr>
+
+<h2>⭐ Support</h2>
+<p>
+Jika project ini membantu:
+</p>
+<ul>
+  <li>⭐ Star repo ini</li>
+</ul>
