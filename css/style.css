@@ -2,6 +2,20 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* container jadi flexible */
+.container {
+    flex: 1;
+}
+
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
