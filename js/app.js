@@ -1,225 +1,226 @@
+let chart1, chart2, chart3;
 
-        let chart1, chart2, chart3;
+document.getElementById("upload").addEventListener("change", handleFile);
+document.getElementById("upload").addEventListener("change", function (e) {
+  const label = document.querySelector(".upload-label");
 
-        document.getElementById('upload').addEventListener('change', handleFile);
-        document.getElementById('upload').addEventListener('change', function(e) {
-            const label = document.querySelector('.upload-label');
+  if (e.target.files.length > 0) {
+    label.classList.add("active");
+    label.innerHTML = `✅ ${e.target.files[0].name}`;
+  }
+});
 
-            if (e.target.files.length > 0) {
-                label.classList.add('active');
-                label.innerHTML = `✅ ${e.target.files[0].name}`;
-            }
-        });
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-        function handleFile(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+  showLoading("Membaca file...");
 
-            showLoading("Membaca file...");
+  const reader = new FileReader();
 
-            const reader = new FileReader();
+  reader.onload = function (evt) {
+    try {
+      const data = new Uint8Array(evt.target.result);
 
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, {
+        type: "array",
+      });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, {
+        defval: "",
+      });
 
-                    const workbook = XLSX.read(data, {
-                        type: 'array'
-                    });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet, {
-                        defval: ""
-                    });
+      processData(json);
+    } catch (err) {
+      alert("Gagal membaca file!");
+      console.error(err);
+    } finally {
+      hideLoading();
+    }
+  };
 
-                    processData(json);
-                } catch (err) {
-                    alert("Gagal membaca file!");
-                    console.error(err);
-                } finally {
-                    hideLoading();
-                }
-            };
+  reader.readAsArrayBuffer(file);
+}
 
-            reader.readAsArrayBuffer(file);
-        }
+function normalize(str) {
+  return str
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\r/g, "")
+    .replace(/\n/g, "")
+    .replace(/\s+/g, " ");
+}
 
-        function normalize(str) {
-            return str
-                .toString()
-                .toLowerCase()
-                .trim()
-                .replace(/\r/g, "")
-                .replace(/\n/g, "")
-                .replace(/\s+/g, " ");
-        }
+function processData(data) {
+  let perTanggal = {};
+  let perJam = {};
+  let total = {
+    pedestrian: 0,
+    vehicle: 0,
+    unknown: 0,
+  };
 
-        function processData(data) {
+  data.forEach((row) => {
+    // 🔥 auto detect header (aman walau beda nama)
+    let rawTime = row.Time || row.time || row["Time "] || "";
+    let origin = row.Origin || row.origin || "";
 
-            let perTanggal = {};
-            let perJam = {};
-            let total = {
-                pedestrian: 0,
-                vehicle: 0,
-                unknown: 0
-            };
+    if (!rawTime || !origin) return;
 
-            data.forEach(row => {
+    origin = normalize(origin);
 
-                // 🔥 auto detect header (aman walau beda nama)
-                let rawTime = row.Time || row.time || row["Time "] || "";
-                let origin = row.Origin || row.origin || "";
+    let tanggal = "";
+    let jam = "";
 
-                if (!rawTime || !origin) return;
+    try {
+      if (typeof rawTime === "number") {
+        let d = XLSX.SSF.parse_date_code(rawTime);
 
-                origin = normalize(origin);
+        tanggal = `${String(d.d).padStart(2, "0")}/${String(d.m).padStart(2, "0")}/${d.y}`;
+        jam = String(d.H).padStart(2, "0") + ":00";
+      } else {
+        rawTime = rawTime.toString().trim();
 
-                let tanggal = "";
-                let jam = "";
+        let parts = rawTime.split(" ");
+        if (parts.length < 2) return;
 
-                try {
-                    if (typeof rawTime === "number") {
-                        let d = XLSX.SSF.parse_date_code(rawTime);
+        tanggal = parts[0];
+        jam = parts[1].substring(0, 2) + ":00";
+      }
+    } catch (e) {
+      console.log("ERROR TIME:", rawTime);
+      return;
+    }
 
-                        tanggal = `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y}`;
-                        jam = String(d.H).padStart(2, '0') + ":00";
-                    } else {
-                        rawTime = rawTime.toString().trim();
+    // INIT
+    if (!perTanggal[tanggal]) {
+      perTanggal[tanggal] = {
+        pedestrian: 0,
+        vehicle: 0,
+        unknown: 0,
+      };
+    }
 
-                        let parts = rawTime.split(" ");
-                        if (parts.length < 2) return;
+    if (!perJam[jam]) {
+      perJam[jam] = {
+        pedestrian: 0,
+        vehicle: 0,
+        unknown: 0,
+      };
+    }
 
-                        tanggal = parts[0];
-                        jam = parts[1].substring(0, 2) + ":00";
-                    }
-                } catch (e) {
-                    console.log("ERROR TIME:", rawTime);
-                    return;
-                }
+    // 🔥 DETEKSI FIX
+    if (origin.includes("pedestrian")) {
+      perTanggal[tanggal].pedestrian++;
+      perJam[jam].pedestrian++;
+      total.pedestrian++;
+    } else if (origin.includes("vehicle")) {
+      perTanggal[tanggal].vehicle++;
+      perJam[jam].vehicle++;
+      total.vehicle++;
+    } else {
+      perTanggal[tanggal].unknown++;
+      perJam[jam].unknown++;
+      total.unknown++;
+    }
+  });
 
-                // INIT
-                if (!perTanggal[tanggal]) {
-                    perTanggal[tanggal] = {
-                        pedestrian: 0,
-                        vehicle: 0,
-                        unknown: 0
-                    };
-                }
+  console.log("HASIL:", perTanggal, perJam, total);
 
-                if (!perJam[jam]) {
-                    perJam[jam] = {
-                        pedestrian: 0,
-                        vehicle: 0,
-                        unknown: 0
-                    };
-                }
+  if (Object.keys(perTanggal).length === 0) {
+    alert("Data tidak terbaca! Cek kolom Time & Origin");
+    return;
+  }
 
-                // 🔥 DETEKSI FIX
-                if (origin.includes("pedestrian")) {
-                    perTanggal[tanggal].pedestrian++;
-                    perJam[jam].pedestrian++;
-                    total.pedestrian++;
-                } else if (origin.includes("vehicle")) {
-                    perTanggal[tanggal].vehicle++;
-                    perJam[jam].vehicle++;
-                    total.vehicle++;
-                } else {
-                    perTanggal[tanggal].unknown++;
-                    perJam[jam].unknown++;
-                    total.unknown++;
-                }
-            });
+  renderCharts(perTanggal, perJam, total);
+  renderTables(perTanggal, perJam, total);
+  window.perTanggalGlobal = perTanggal;
+  window.perJamGlobal = perJam;
+  window.totalGlobal = total;
+}
 
-            console.log("HASIL:", perTanggal, perJam, total);
+function renderCharts(tanggalData, jamData, total) {
+  if (chart1) chart1.destroy();
+  if (chart2) chart2.destroy();
+  if (chart3) chart3.destroy();
 
-            if (Object.keys(perTanggal).length === 0) {
-                alert("Data tidak terbaca! Cek kolom Time & Origin");
-                return;
-            }
+  const tgl = Object.keys(tanggalData).sort((a, b) => {
+    return (
+      new Date(a.split("/").reverse().join("-")) -
+      new Date(b.split("/").reverse().join("-"))
+    );
+  });
 
-            renderCharts(perTanggal, perJam, total);
-            renderTables(perTanggal, perJam, total);
-            window.perTanggalGlobal = perTanggal;
-            window.perJamGlobal = perJam;
-            window.totalGlobal = total;
-        }
+  const jam = Object.keys(jamData).sort();
 
-        function renderCharts(tanggalData, jamData, total) {
+  // ===== TANGGAL =====
+  chart1 = new Chart(document.getElementById("chartTanggal"), {
+    type: "bar",
+    data: {
+      labels: tgl,
+      datasets: [
+        {
+          label: "Pedestrian",
+          data: tgl.map((d) => tanggalData[d].pedestrian),
+        },
+        {
+          label: "Vehicle",
+          data: tgl.map((d) => tanggalData[d].vehicle),
+        },
+        {
+          label: "Unknown",
+          data: tgl.map((d) => tanggalData[d].unknown),
+        },
+      ],
+    },
+  });
 
-            if (chart1) chart1.destroy();
-            if (chart2) chart2.destroy();
-            if (chart3) chart3.destroy();
+  // ===== PIE =====
+  chart2 = new Chart(document.getElementById("chartPie"), {
+    type: "pie",
+    data: {
+      labels: ["Pedestrian", "Vehicle", "Unknown"],
+      datasets: [
+        {
+          data: [total.pedestrian, total.vehicle, total.unknown],
+        },
+      ],
+    },
+  });
 
-            const tgl = Object.keys(tanggalData).sort((a, b) => {
-                return new Date(a.split('/').reverse().join('-')) -
-                    new Date(b.split('/').reverse().join('-'));
-            });
+  // ===== JAM =====
+  chart3 = new Chart(document.getElementById("chartJam"), {
+    type: "bar",
+    data: {
+      labels: jam,
+      datasets: [
+        {
+          label: "Pedestrian",
+          data: jam.map((j) => jamData[j].pedestrian),
+        },
+        {
+          label: "Vehicle",
+          data: jam.map((j) => jamData[j].vehicle),
+        },
+        {
+          label: "Unknown",
+          data: jam.map((j) => jamData[j].unknown),
+        },
+      ],
+    },
+  });
+}
 
-            const jam = Object.keys(jamData).sort();
+function renderTables(tanggalData, jamData, total) {
+  const tglKeys = Object.keys(tanggalData);
+  const jamKeys = Object.keys(jamData).sort();
 
-            // ===== TANGGAL =====
-            chart1 = new Chart(document.getElementById('chartTanggal'), {
-                type: 'bar',
-                data: {
-                    labels: tgl,
-                    datasets: [{
-                            label: 'Pedestrian',
-                            data: tgl.map(d => tanggalData[d].pedestrian)
-                        },
-                        {
-                            label: 'Vehicle',
-                            data: tgl.map(d => tanggalData[d].vehicle)
-                        },
-                        {
-                            label: 'Unknown',
-                            data: tgl.map(d => tanggalData[d].unknown)
-                        }
-                    ]
-                }
-            });
-
-            // ===== PIE =====
-            chart2 = new Chart(document.getElementById('chartPie'), {
-                type: 'pie',
-                data: {
-                    labels: ['Pedestrian', 'Vehicle', 'Unknown'],
-                    datasets: [{
-                        data: [total.pedestrian, total.vehicle, total.unknown]
-                    }]
-                }
-            });
-
-            // ===== JAM =====
-            chart3 = new Chart(document.getElementById('chartJam'), {
-                type: 'bar',
-                data: {
-                    labels: jam,
-                    datasets: [{
-                            label: 'Pedestrian',
-                            data: jam.map(j => jamData[j].pedestrian)
-                        },
-                        {
-                            label: 'Vehicle',
-                            data: jam.map(j => jamData[j].vehicle)
-                        },
-                        {
-                            label: 'Unknown',
-                            data: jam.map(j => jamData[j].unknown)
-                        }
-                    ]
-                }
-            });
-        }
-
-        function renderTables(tanggalData, jamData, total) {
-
-            const tglKeys = Object.keys(tanggalData);
-            const jamKeys = Object.keys(jamData).sort();
-
-            // ===== TABLE TANGGAL =====
-            let tglHTML = "";
-            Object.keys(tanggalData).forEach(tgl => {
-                let d = tanggalData[tgl];
-                tglHTML += `
+  // ===== TABLE TANGGAL =====
+  let tglHTML = "";
+  Object.keys(tanggalData).forEach((tgl) => {
+    let d = tanggalData[tgl];
+    tglHTML += `
             <tr>
                 <td>${tgl}</td>
                 <td>${d.pedestrian.toLocaleString()}</td>
@@ -227,14 +228,16 @@
                 <td>${d.unknown.toLocaleString()}</td>
             </tr>
         `;
-            });
-            document.getElementById("tableTanggal").innerHTML = tglHTML;
+  });
+  document.getElementById("tableTanggal").innerHTML = tglHTML;
 
-            // ===== TABLE JAM =====
-            let jamHTML = "";
-            Object.keys(jamData).sort().forEach(j => {
-                let d = jamData[j];
-                jamHTML += `
+  // ===== TABLE JAM =====
+  let jamHTML = "";
+  Object.keys(jamData)
+    .sort()
+    .forEach((j) => {
+      let d = jamData[j];
+      jamHTML += `
             <tr>
                 <td>${j}</td>
                 <td>${d.pedestrian.toLocaleString()}</td>
@@ -242,19 +245,19 @@
                 <td>${d.unknown.toLocaleString()}</td>
             </tr>
         `;
-            });
-            document.getElementById("tableJam").innerHTML = jamHTML;
+    });
+  document.getElementById("tableJam").innerHTML = jamHTML;
 
-            // ===== PAGINATION TANGGAL =====
-            paginate(tglKeys, tanggalData, "tableTanggal", "paginationTanggal");
+  // ===== PAGINATION TANGGAL =====
+  paginate(tglKeys, tanggalData, "tableTanggal", "paginationTanggal");
 
-            // ===== PAGINATION JAM =====
-            paginate(jamKeys, jamData, "tableJam", "paginationJam");
+  // ===== PAGINATION JAM =====
+  paginate(jamKeys, jamData, "tableJam", "paginationJam");
 
-            // ===== TABLE SUMMARY =====
-            const grandTotal = total.pedestrian + total.vehicle + total.unknown;
+  // ===== TABLE SUMMARY =====
+  const grandTotal = total.pedestrian + total.vehicle + total.unknown;
 
-            document.getElementById("tableSummary").innerHTML = `
+  document.getElementById("tableSummary").innerHTML = `
         <tr><td>Pedestrian</td><td>${total.pedestrian.toLocaleString()}</td></tr>
         <tr><td>Vehicle</td><td>${total.vehicle.toLocaleString()}</td></tr>
         <tr><td>Unknown</td><td>${total.unknown.toLocaleString()}</td></tr>
@@ -263,24 +266,24 @@
             <td>${grandTotal.toLocaleString()}</td>
         </tr>
     `;
-        }
+}
 
-        function paginate(dataKeys, dataObj, tableId, paginationId, rowsPerPage = 10) {
-            let currentPage = 1;
+function paginate(dataKeys, dataObj, tableId, paginationId, rowsPerPage = 10) {
+  let currentPage = 1;
 
-            function renderPage(page) {
-                currentPage = page;
+  function renderPage(page) {
+    currentPage = page;
 
-                const start = (page - 1) * rowsPerPage;
-                const end = start + rowsPerPage;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
 
-                const pageData = dataKeys.slice(start, end);
+    const pageData = dataKeys.slice(start, end);
 
-                let html = "";
+    let html = "";
 
-                pageData.forEach(key => {
-                    const d = dataObj[key];
-                    html += `
+    pageData.forEach((key) => {
+      const d = dataObj[key];
+      html += `
                 <tr>
                     <td>${key}</td>
                     <td>${d.pedestrian.toLocaleString()}</td>
@@ -288,116 +291,120 @@
                     <td>${d.unknown.toLocaleString()}</td>
                 </tr>
             `;
-                });
+    });
 
-                document.getElementById(tableId).innerHTML = html;
+    document.getElementById(tableId).innerHTML = html;
 
-                renderPagination();
-            }
+    renderPagination();
+  }
 
-            function renderPagination() {
-                const totalPages = Math.ceil(dataKeys.length / rowsPerPage);
+  function renderPagination() {
+    const totalPages = Math.ceil(dataKeys.length / rowsPerPage);
 
-                let buttons = "";
+    let buttons = "";
 
-                for (let i = 1; i <= totalPages; i++) {
-                    buttons += `
+    for (let i = 1; i <= totalPages; i++) {
+      buttons += `
                 <button onclick="goPage('${tableId}', ${i})"
-                    style="margin:2px; ${i === currentPage ? 'font-weight:bold;' : ''}">
+                    style="margin:2px; ${i === currentPage ? "font-weight:bold;" : ""}">
                     ${i}
                 </button>
             `;
-                }
+    }
 
-                document.getElementById(paginationId).innerHTML = buttons;
-            }
+    document.getElementById(paginationId).innerHTML = buttons;
+  }
 
-            window.goPage = function(table, page) {
-                if (table === tableId) {
-                    renderPage(page);
-                }
-            }
+  window.goPage = function (table, page) {
+    if (table === tableId) {
+      renderPage(page);
+    }
+  };
 
-            renderPage(1);
-        }
+  renderPage(1);
+}
 
-        async function exportPDF() {
+async function exportPDF() {
+  showLoading("Membuat PDF...");
 
-            showLoading("Membuat PDF...");
+  try {
+    const { jsPDF } = window.jspdf;
 
-            try {
-                const {
-                    jsPDF
-                } = window.jspdf;
+    const pdf = new jsPDF("l", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-                const pdf = new jsPDF("l", "mm", "a4");
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
+    function addTitle(text) {
+      const today = new Date().toLocaleDateString("id-ID");
 
-                function addTitle(text) {
-                    const today = new Date().toLocaleDateString("id-ID");
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text(text, 10, 10);
 
-                    pdf.setFont("helvetica", "bold");
-                    pdf.setFontSize(16);
-                    pdf.text(text, 10, 10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text("Generated: " + today, pageWidth - 60, 10);
 
-                    pdf.setFont("helvetica", "normal");
-                    pdf.setFontSize(10);
-                    pdf.text("Generated: " + today, pageWidth - 60, 10);
+      pdf.line(10, 12, pageWidth - 10, 12);
+    }
 
-                    pdf.line(10, 12, pageWidth - 10, 12);
-                }
+    async function capture(el) {
+      return await html2canvas(el, {
+        scale: 3,
+        useCORS: true,
+      });
+    }
 
-                async function capture(el) {
-                    return await html2canvas(el, {
-                        scale: 3,
-                        useCORS: true
-                    });
-                }
+    function addImageFit(canvas) {
+      const img = canvas.toDataURL("image/png");
 
-                function addImageFit(canvas) {
-                    const img = canvas.toDataURL("image/png");
+      let imgWidth = pageWidth - 20;
+      let imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    let imgWidth = pageWidth - 20;
-                    let imgHeight = (canvas.height * imgWidth) / canvas.width;
+      if (imgHeight > pageHeight - 30) {
+        imgHeight = pageHeight - 30;
+        imgWidth = (canvas.width * imgHeight) / canvas.height;
+      }
 
-                    if (imgHeight > pageHeight - 30) {
-                        imgHeight = pageHeight - 30;
-                        imgWidth = (canvas.width * imgHeight) / canvas.height;
-                    }
+      pdf.addImage(
+        img,
+        "PNG",
+        (pageWidth - imgWidth) / 2,
+        20,
+        imgWidth,
+        imgHeight,
+      );
+    }
 
-                    pdf.addImage(img, "PNG", (pageWidth - imgWidth) / 2, 20, imgWidth, imgHeight);
-                }
+    function addLongImage(canvas) {
+      const img = canvas.toDataURL("image/png");
 
-                function addLongImage(canvas) {
-                    const img = canvas.toDataURL("image/png");
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    const imgWidth = pageWidth - 20;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 20;
 
-                    let heightLeft = imgHeight;
-                    let position = 20;
+      pdf.addImage(img, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight - 30;
 
-                    pdf.addImage(img, "PNG", 10, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight - 30;
+      while (heightLeft > 0) {
+        pdf.addPage();
+        addTitle("Continued");
 
-                    while (heightLeft > 0) {
-                        pdf.addPage();
-                        addTitle("Continued");
+        position = heightLeft - imgHeight + 20;
+        pdf.addImage(img, "PNG", 10, position, imgWidth, imgHeight);
 
-                        position = heightLeft - imgHeight + 20;
-                        pdf.addImage(img, "PNG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight - 30;
+      }
+    }
 
-                        heightLeft -= pageHeight - 30;
-                    }
-                }
+    function formatNumber(num) {
+      return num.toLocaleString("id-ID");
+    }
 
-                function formatNumber(num) {
-                    return num.toLocaleString("id-ID");
-                }
-
-                function createTable(title, dataObj, isJam = false) {
-                    let html = `
+    function createTable(title, dataObj, isJam = false) {
+      let html = `
                 <div style="padding:20px; font-family:Arial">
                     <h2>${title}</h2>
                     <table border="1" style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -412,9 +419,11 @@
                         <tbody>
             `;
 
-                    Object.keys(dataObj).sort().forEach(key => {
-                        let d = dataObj[key];
-                        html += `
+      Object.keys(dataObj)
+        .sort()
+        .forEach((key) => {
+          let d = dataObj[key];
+          html += `
                 <tr>
                     <td>${key}</td>
                     <td>${formatNumber(d.pedestrian)}</td>
@@ -422,42 +431,42 @@
                     <td>${formatNumber(d.unknown)}</td>
                 </tr>
             `;
-                    });
+        });
 
-                    html += `</tbody></table></div>`;
-                    return html;
-                }
+      html += `</tbody></table></div>`;
+      return html;
+    }
 
-                const perTanggal = window.perTanggalGlobal;
-                const perJam = window.perJamGlobal;
-                const total = window.totalGlobal;
+    const perTanggal = window.perTanggalGlobal;
+    const perJam = window.perJamGlobal;
+    const total = window.totalGlobal;
 
-                // CHART TANGGAL
-                addTitle("Traffic per Tanggal");
-                addImageFit(await capture(chartTanggal));
+    // CHART TANGGAL
+    addTitle("Traffic per Tanggal");
+    addImageFit(await capture(chartTanggal));
 
-                // TABLE TANGGAL
-                pdf.addPage();
-                addTitle("Detail Tanggal");
+    // TABLE TANGGAL
+    pdf.addPage();
+    addTitle("Detail Tanggal");
 
-                let div1 = document.createElement("div");
-                div1.innerHTML = createTable("Table Tanggal", perTanggal);
-                document.body.appendChild(div1);
+    let div1 = document.createElement("div");
+    div1.innerHTML = createTable("Table Tanggal", perTanggal);
+    document.body.appendChild(div1);
 
-                addLongImage(await capture(div1));
-                div1.remove();
+    addLongImage(await capture(div1));
+    div1.remove();
 
-                // PIE
-                pdf.addPage();
-                addTitle("Traffic Distribution");
-                addImageFit(await capture(chartPie));
+    // PIE
+    pdf.addPage();
+    addTitle("Traffic Distribution");
+    addImageFit(await capture(chartPie));
 
-                // SUMMARY
-                pdf.addPage();
-                addTitle("Summary");
+    // SUMMARY
+    pdf.addPage();
+    addTitle("Summary");
 
-                let sumDiv = document.createElement("div");
-                sumDiv.innerHTML = `
+    let sumDiv = document.createElement("div");
+    sumDiv.innerHTML = `
             <div style="padding:20px; font-family:Arial">
                 <h2>Summary</h2>
                 <table border="1" style="width:100%; border-collapse:collapse;">
@@ -478,43 +487,41 @@
                     </tbody>
                 </table>
             </div>`;
-                document.body.appendChild(sumDiv);
+    document.body.appendChild(sumDiv);
 
-                addImageFit(await capture(sumDiv));
-                sumDiv.remove();
+    addImageFit(await capture(sumDiv));
+    sumDiv.remove();
 
-                // CHART JAM
-                pdf.addPage();
-                addTitle("Traffic per Jam");
-                addImageFit(await capture(chartJam));
+    // CHART JAM
+    pdf.addPage();
+    addTitle("Traffic per Jam");
+    addImageFit(await capture(chartJam));
 
-                // TABLE JAM
-                pdf.addPage();
-                addTitle("Detail Jam");
+    // TABLE JAM
+    pdf.addPage();
+    addTitle("Detail Jam");
 
-                let div2 = document.createElement("div");
-                div2.innerHTML = createTable("Table Jam", perJam, true);
-                document.body.appendChild(div2);
+    let div2 = document.createElement("div");
+    div2.innerHTML = createTable("Table Jam", perJam, true);
+    document.body.appendChild(div2);
 
-                addLongImage(await capture(div2));
-                div2.remove();
+    addLongImage(await capture(div2));
+    div2.remove();
 
-                pdf.save("Traffic-report.pdf");
+    pdf.save("Traffic-report.pdf");
+  } catch (err) {
+    console.error(err);
+    alert("Gagal export PDF!");
+  } finally {
+    hideLoading();
+  }
+}
 
-            } catch (err) {
-                console.error(err);
-                alert("Gagal export PDF!");
-            } finally {
-                hideLoading();
-            }
-        }
+function showLoading(text = "Processing...") {
+  document.getElementById("loadingOverlay").style.display = "flex";
+  document.getElementById("loadingText").innerText = text;
+}
 
-        function showLoading(text = "Processing...") {
-            document.getElementById("loadingOverlay").style.display = "flex";
-            document.getElementById("loadingText").innerText = text;
-        }
-
-        function hideLoading() {
-            document.getElementById("loadingOverlay").style.display = "none";
-        }
-    
+function hideLoading() {
+  document.getElementById("loadingOverlay").style.display = "none";
+}
