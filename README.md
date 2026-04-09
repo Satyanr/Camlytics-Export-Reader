@@ -1,7 +1,7 @@
 <h1 align="center">📊 Traffic Analytics Dashboard</h1>
 
 <p align="center">
-Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi data.
+Dashboard berbasis web untuk Mrmbaca csv hasil export Camlytics dan otomatis menampilkan visualisasi data.
 </p>
 
 <hr>
@@ -18,7 +18,7 @@ Dashboard berbasis web untuk upload Excel dan otomatis menampilkan visualisasi d
 
 <hr>
 
-<h2>📂 Format Data Excel</h2>
+<h2>📂 Format Data</h2>
 
 <table>
   <thead>
