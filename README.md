@@ -1,7 +1,7 @@
 <h1 align="center">📊 Traffic Analytics Dashboard</h1>
 
 <p align="center">
-Dashboard berbasis web untuk Mrmbaca csv hasil export Camlytics dan otomatis menampilkan visualisasi data.
+Dashboard berbasis web untuk Membaca CSV hasil export Camlytics dan otomatis menampilkan visualisasi data.
 </p>
 
 <hr>
