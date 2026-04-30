@@ -307,14 +307,9 @@ function paginate(dataKeys, dataObj, tableId, paginationId, rowsPerPage = 10) {
     document.getElementById(paginationId).innerHTML = buttons;
   }
 
-  window.goPage = function (table, page) {
-    if (table === tableId) {
-      renderPage(page);
-    }
-  };
-
-  renderPage(1);
-}
+  window[`goPage_${tableId}`] = function (page) {
+  renderPage(page);
+};
 
 async function exportPDF() {
   showLoading("Membuat PDF...");
