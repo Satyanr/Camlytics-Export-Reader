@@ -214,14 +214,12 @@ function renderCharts(tanggalData, jamData, total) {
 
 function renderTables(tanggalData, jamData, total) {
   const tglKeys = Object.keys(tanggalData).sort((a, b) => {
-  return (
-    new Date(a.split("/").reverse().join("-")) -
-    new Date(b.split("/").reverse().join("-"))
-  );
-});
+    return (
+      new Date(a.split("/").reverse().join("-")) -
+      new Date(b.split("/").reverse().join("-"))
+    );
+  });
   const jamKeys = Object.keys(jamData).sort();
-
-  
 
   // ===== TABLE JAM =====
   let jamHTML = "";
@@ -308,8 +306,10 @@ function paginate(dataKeys, dataObj, tableId, paginationId, rowsPerPage = 10) {
   }
 
   window[`goPage_${tableId}`] = function (page) {
-  renderPage(page);
-};
+    renderPage(page);
+  };
+  renderPage(1); // INIT
+}
 
 async function exportPDF() {
   showLoading("Membuat PDF...");
