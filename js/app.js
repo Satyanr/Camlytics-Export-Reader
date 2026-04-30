@@ -221,20 +221,7 @@ function renderTables(tanggalData, jamData, total) {
 });
   const jamKeys = Object.keys(jamData).sort();
 
-  // ===== TABLE TANGGAL =====
-  let tglHTML = "";
-  Object.keys(tanggalData).forEach((tgl) => {
-    let d = tanggalData[tgl];
-    tglHTML += `
-            <tr>
-                <td>${tgl}</td>
-                <td>${d.pedestrian.toLocaleString()}</td>
-                <td>${d.vehicle.toLocaleString()}</td>
-                <td>${d.unknown.toLocaleString()}</td>
-            </tr>
-        `;
-  });
-  document.getElementById("tableTanggal").innerHTML = tglHTML;
+  
 
   // ===== TABLE JAM =====
   let jamHTML = "";
