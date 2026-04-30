@@ -297,11 +297,11 @@ function paginate(dataKeys, dataObj, tableId, paginationId, rowsPerPage = 10) {
 
     for (let i = 1; i <= totalPages; i++) {
       buttons += `
-                <button onclick="goPage('${tableId}', ${i})"
-                    style="margin:2px; ${i === currentPage ? "font-weight:bold;" : ""}">
-                    ${i}
-                </button>
-            `;
+    <button onclick="goPage_${tableId}(${i})"
+        style="margin:2px; ${i === currentPage ? "font-weight:bold;" : ""}">
+        ${i}
+    </button>
+`;
     }
 
     document.getElementById(paginationId).innerHTML = buttons;
