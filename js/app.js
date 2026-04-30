@@ -213,7 +213,12 @@ function renderCharts(tanggalData, jamData, total) {
 }
 
 function renderTables(tanggalData, jamData, total) {
-  const tglKeys = Object.keys(tanggalData);
+  const tglKeys = Object.keys(tanggalData).sort((a, b) => {
+  return (
+    new Date(a.split("/").reverse().join("-")) -
+    new Date(b.split("/").reverse().join("-"))
+  );
+});
   const jamKeys = Object.keys(jamData).sort();
 
   // ===== TABLE TANGGAL =====
